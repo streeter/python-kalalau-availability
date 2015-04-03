@@ -58,26 +58,32 @@ if __name__ == '__main__':
     optparser.add_option(
         "-d", "--day", dest="day", default=today.day, type="int",
         help="The day to check.")
+    optparser.add_option(
+        "-n", "--range", dest="range", default=1, type="int",
+        help="The range of days after to also check.")
 
     (options, args) = optparser.parse_args()
 
-    date = datetime.datetime(options.year, options.month, options.day)
+    for offset in range(0, options.range):
+        date = datetime.datetime(
+            options.year, options.month, options.day + offset)
 
+        if options.verbose:
+            print('Checking availability on {}...'.format(date.strftime('%x')))
+
+        try:
+            count = find_availability(date)
+        except Exception as e:
+            if options.verbose:
+                raise
+            sys.exit(e)
+
+        if count > 0:
+            if options.verbose:
+                print("We have availability! {}".format(count))
+            sys.exit(0)
+
+    # Didn't find any availability
     if options.verbose:
-        print('Checking availability on {}...'.format(date.strftime('%x')))
-
-    try:
-        count = find_availability(date)
-    except Exception as e:
-        if options.verbose:
-            raise
-        sys.exit(e)
-
-    if count > 0:
-        if options.verbose:
-            print("We have availability! {}".format(count))
-        sys.exit(0)
-    else:
-        if options.verbose:
-            print("No availability for {}".format(date.strftime('%x')))
-        sys.exit(1)
+        print("No availability for {}".format(date.strftime('%x')))
+    sys.exit(1)
